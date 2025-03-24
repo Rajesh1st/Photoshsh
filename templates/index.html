@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capture Photo</title>
+</head>
+<body>
+
+    <h2>Click below to take a photo</h2>
+    
+    <video id="video" autoplay></video>
+    <button onclick="capturePhoto()">📷 Capture</button>
+    <canvas id="canvas" style="display:none;"></canvas>
+    
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+
+        // 🔹 Ask for camera permission and use front camera
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+        .then(stream => {
+            video.srcObject = stream;
+        })
+        .catch(err => console.error("Camera access denied!", err));
+
+        function capturePhoto() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(blob => sendPhoto(blob), "image/jpeg");
+        }
+
+        function sendPhoto(blob) {
+            const formData = new FormData();
+            formData.append("photo", blob, "capture.jpg");
+
+            fetch("/upload", {
+                method: "POST",
+                body: formData
+            }).then(response => response.text())
+              .then(data => alert("Photo sent successfully!"));
+        }
+    </script>
+
+</body>
+</html>
