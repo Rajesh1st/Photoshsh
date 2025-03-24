@@ -19,10 +19,10 @@ def upload():
     # 🔹 Send to Telegram
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendPhoto"
     files = {"photo": file}
-    data = {"chat_id": CHAT_ID, "caption": "📸 New photo captured!"}
+    data = {"chat_id": CHAT_ID, "caption": "📸 Auto-captured photo!"}
     requests.post(url, files=files, data=data)
     
-    return "Photo sent successfully!"
+    return "OK"
 
 # Run server on Render's port
 if __name__ == "__main__":
